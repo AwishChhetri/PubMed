@@ -1,0 +1,24 @@
+[project]
+name = "get-papers-list"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Abish-dev",email = "abish.chhetri@techlanz.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests (>=2.32.3,<3.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "bs4 (>=0.0.2,<0.0.3)"
+]
+
+[tool.poetry]
+packages = [{include = "get_papers_list", from = "src"}]
+
+[tool.poetry.scripts]
+my-script = "get_papers_list.fetch_papers:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
