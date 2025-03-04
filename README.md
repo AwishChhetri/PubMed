@@ -117,5 +117,5 @@ def save_to_csv(papers, filename):
 ```
 
 ---
-This report provides a detailed summary of the approach, methodology, and results, ensuring clarity and completeness.
+
 
