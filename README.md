@@ -118,4 +118,11 @@ def save_to_csv(papers, filename):
 
 ---
 
+### **Tools Used**  
+1. **PubMed API (Entrez Utilities)** – Fetches and retrieves paper details (`esearch.fcgi`, `efetch.fcgi`).  
+2. **Python Libraries** – `requests`, `Bio.Entrez`, `pandas`, `csv` for data retrieval and processing.  
+3. **Multithreading** – `ThreadPoolExecutor` for faster API calls.  
+4. **Data Parsing** – `xml.etree.ElementTree`, string processing, regex for author affiliation filtering.  
+5. **Version Control & Dependencies** – Git, GitHub, Poetry for package management.
+
 
