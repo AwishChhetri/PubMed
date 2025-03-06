@@ -5,11 +5,17 @@ import re
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 
-def fetch_papers(topic: str, retmax: int = 200) -> List[Dict[str, Any]]:
+def fetch_papers(topic: str, retmax: int = 300) -> List[Dict[str, Any]]:
     """
-    Fetches papers from PubMed based on a given topic and processes them.
+    Fetches a list of paper IDs related to the given topic from PubMed.
+
+    Args:
+        topic (str): The search topic for fetching papers.
+        retmax (int): Maximum number of papers to fetch. Default is 200.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries containing paper IDs.
     """
-    print(f"Fetching papers for topic: {topic}...")
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     params = {"db": "pubmed", "term": topic, "retmode": "xml", "retmax": retmax}
     
@@ -23,7 +29,7 @@ def fetch_papers(topic: str, retmax: int = 200) -> List[Dict[str, Any]]:
             print("No papers found for the given topic.")
             return []
         
-        print(f"Found {len(papers_list)} papers. Fetching details...")
+        print(f"Found {len(papers_list)} papers.")
         return [{"id": paper_id} for paper_id in papers_list]
     except requests.RequestException as e:
         print(f"Error fetching papers: {e}")
@@ -31,9 +37,14 @@ def fetch_papers(topic: str, retmax: int = 200) -> List[Dict[str, Any]]:
 
 def fetch_paper_details(paper_id: str) -> Dict[str, Any]:
     """
-    Fetches details of a paper given its PubMed ID and extracts emails.
+    Fetches detailed information for a specific paper using its PubMed ID.
+
+    Args:
+        paper_id (str): The PubMed ID of the paper.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing paper details such as title, date, journal, DOI, and authors.
     """
-    print(f"Fetching details for paper ID: {paper_id}...")
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
     params = {"db": "pubmed", "id": paper_id, "retmode": "xml"}
     
@@ -59,7 +70,6 @@ def fetch_paper_details(paper_id: str) -> Dict[str, Any]:
             affiliation = author.find(".//Affiliation")
             email = None
 
-            # Extract email if it appears in Affiliation
             if affiliation is not None:
                 email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', affiliation.text)
                 if email_match:
@@ -71,9 +81,6 @@ def fetch_paper_details(paper_id: str) -> Dict[str, Any]:
                 "email": email if email else "N/A"
             })
         
-        print(f"Details fetched for paper ID: {paper_id}")
-        print({"id": paper_id, "title": title, "date": pub_date, "journal": journal, "doi": doi, "authors": authors})
-        
         return {"id": paper_id, "title": title, "date": pub_date, "journal": journal, "doi": doi, "authors": authors}
     except requests.RequestException as e:
         print(f"Failed to fetch details for ID {paper_id}: {e}")
@@ -81,15 +88,19 @@ def fetch_paper_details(paper_id: str) -> Dict[str, Any]:
 
 def extract_company_name(affiliation: str) -> str:
     """
-    Extracts the company name from an affiliation string.
+    Extracts the company name from an author's affiliation string.
+
+    Args:
+        affiliation (str): The affiliation string of the author.
+
+    Returns:
+        str: The extracted company name or "N/A" if not found.
     """
-    # Common patterns for company names
     company_patterns = [
         r"\b(?:inc\.?|ltd\.?|llc\.?|corp\.?|corporation|company|co\.?)\b",
         r"\b(?:pharmaceuticals?|biotech|industries|solutions|group)\b",
     ]
     
-    # Split the affiliation into parts and look for patterns
     for part in affiliation.split(","):
         part = part.strip()
         for pattern in company_patterns:
@@ -99,14 +110,32 @@ def extract_company_name(affiliation: str) -> str:
 
 def filter_papers(papers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Filters papers and categorizes authors as academic or non-academic.
-    Only papers with at least one non-academic author are included.
-    Extracts company names for non-academic authors.
+    Filters papers based on the affiliation of the authors. Only papers with at least one non-academic author are included.
+
+    Args:
+        papers (List[Dict[str, Any]]): A list of papers to filter.
+
+    Returns:
+        List[Dict[str, Any]]: A list of filtered papers with non-academic authors.
     """
-    print("Filtering papers based on author affiliation...")
-    academic_keywords = ["university", "college", "institute", "research center", "hospital"]
-    non_academic_keywords = ["pharmaceutical", "biotech", "company", "corporation"]
-    
+    academic_keywords = [
+    "university", "college", "institute", "research center", "hospital", 
+    "academy", "school", "faculty", "department", "laboratory", "clinic", 
+    "medical center", "teaching hospital", "educational", "scholar", 
+    "postgraduate", "undergraduate", "phd", "professor", "lecturer", 
+    "researcher", "scientist", "academic", "higher education", "campus"
+]
+
+    non_academic_keywords = [
+    "pharmaceutical", "biotech", "company", "corporation", "inc.", 
+    "ltd.", "llc", "corp", "co.", "industry", "industries", "group", 
+    "solutions", "technologies", "enterprise", "business", "venture", 
+    "startup", "consulting", "consultancy", "firm", "agency", 
+    "development", "research and development", "r&d", "manufacturing", 
+    "production", "services", "healthcare", "medical devices", 
+    "clinical trials", "innovation", "venture capital", "private equity"
+]
+
     filtered_papers = []
     
     with ThreadPoolExecutor() as executor:
@@ -119,11 +148,9 @@ def filter_papers(papers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         for author in details.get('authors', []):
             affiliation = author.get('affiliation', '').lower()
             
-            # Check if the affiliation contains any academic keywords
             if any(keyword in affiliation for keyword in academic_keywords):
                 academic_authors.append(author['name'])
             
-            # Check if the affiliation contains any non-academic keywords
             elif any(keyword in affiliation for keyword in non_academic_keywords):
                 company_name = extract_company_name(author.get('affiliation', ''))
                 non_academic_authors.append({
@@ -131,20 +158,22 @@ def filter_papers(papers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                     "company": company_name
                 })
         
-        # Only include papers with at least one non-academic author
         if len(non_academic_authors) > 0:
             details["academic_authors"] = academic_authors
             details["non_academic_authors"] = non_academic_authors
             filtered_papers.append(details)
     
-    print(f"Filtering complete. {len(filtered_papers)} papers with non-academic authors processed.")
+    print(f"Filtered {len(filtered_papers)} papers with non-academic authors.")
     return filtered_papers
 
 def save_to_csv(papers: List[Dict[str, Any]], filename: str) -> None:
     """
-    Saves non-academic authors' names, company names, and emails in a CSV file.
+    Saves the filtered papers to a CSV file.
+
+    Args:
+        papers (List[Dict[str, Any]]): A list of filtered papers.
+        filename (str): The name of the CSV file to save the data.
     """
-    print("Saving filtered papers to CSV...")
     df = pd.DataFrame([
         {
             "PubmedID": p['id'],
@@ -158,24 +187,29 @@ def save_to_csv(papers: List[Dict[str, Any]], filename: str) -> None:
         }
         for p in papers
     ])
-    print("--------------------------------------------------------")
-    print(df)
     df.to_csv(filename, index=False)
-    print(f"Filtered papers saved to {filename}")
+    print(f"Saved {len(papers)} papers to {filename}.")
 
 def main():
-    topic = "Health Care Machine learning"
+    """
+    Main function to fetch, filter, and save papers related to a specific topic.
+    """
+    topic = "Health Care with Machine learning"
+    print(f"Fetching papers for topic: {topic}...")
     papers = fetch_papers(topic)
     if not papers:
         print("No papers found. Exiting.")
         return
     
+    print("Filtering papers based on author affiliation...")
     filtered_papers = filter_papers(papers)
     if not filtered_papers:
         print("No relevant papers found after filtering. Exiting.")
         return
     
+    print("Saving filtered papers to CSV...")
     save_to_csv(filtered_papers, "filtered_papers.csv")
+    print("Process completed.")
 
 if __name__ == "__main__":
     main()

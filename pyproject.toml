@@ -17,7 +17,7 @@ dependencies = [
 packages = [{include = "get_papers_list", from = "src"}]
 
 [tool.poetry.scripts]
-my-script = "get_papers_list.fetch_papers:main"
+start = "get_papers_list.fetch_papers:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
