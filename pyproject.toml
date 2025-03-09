@@ -1,24 +1,16 @@
-[project]
+[tool.poetry]
 name = "get-papers-list"
 version = "0.1.0"
-description = ""
-authors = [
-    {name = "Abish-dev",email = "abish.chhetri@techlanz.com"}
-]
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "requests (>=2.32.3,<3.0.0)",
-    "pandas (>=2.2.3,<3.0.0)",
-    "bs4 (>=0.0.2,<0.0.3)"
-]
+description = "Fetch and filter PubMed papers based on a query."
+authors = ["Your Name <your.email@example.com>"]
 
-[tool.poetry]
-packages = [{include = "get_papers_list", from = "src"}]
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.26.0"
+pandas = "^1.3.0"
 
 [tool.poetry.scripts]
-start = "get_papers_list.fetch_papers:main"
+get-papers-list = "get_papers_list_cli:main"
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
