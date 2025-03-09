@@ -23,7 +23,7 @@ def fetch_paper_details(paper_id: str, max_retries: int = 3, delay: float = 0.5)
         try:
             # Fetch the paper details from PubMed
             response = requests.get(base_url, params=params, timeout=10)
-            response.raise_for_status()  # Raise an error for bad status codes
+            response.raise_for_status() 
             root = ET.fromstring(response.content)
 
             # Extract basic paper details
@@ -66,8 +66,8 @@ def fetch_paper_details(paper_id: str, max_retries: int = 3, delay: float = 0.5)
         except requests.RequestException as e:
             if attempt < max_retries - 1:
              
-                time.sleep(delay)  # Wait before retrying
-                delay *= 2  # Exponential backoff
+                time.sleep(delay) 
+                delay *= 2 
             else:
        
                 return None
