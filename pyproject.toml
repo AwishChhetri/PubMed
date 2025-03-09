@@ -2,7 +2,7 @@
 name = "get-papers-list"
 version = "0.1.0"
 description = "Fetch and filter PubMed papers based on a query."
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Abish abishchhetri.2502@gmail.com"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
