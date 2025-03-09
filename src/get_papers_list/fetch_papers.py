@@ -2,7 +2,7 @@ import requests
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Any
 
-def fetch_papers(topic: str, retmax: int = 50) -> List[Dict[str, Any]]:
+def fetch_papers(topic: str, retmax: int = 30) -> List[Dict[str, Any]]:
     """
     Fetches a list of paper IDs related to the given topic from PubMed.
 
